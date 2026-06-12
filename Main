@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SL Lavação Automotiva</title>
+<style>
+  :root {
+    --ouro: #d4af37;
+    --ouro-dark: #b8860b;
+    --preto: #1a1a1a;
+    --cinza-escuro: #2d2d2d;
+    --branco: #ffffff;
+    --cinza-medio: #3d3d3d;
+    --cinza-borda: #444;
+    --texto-muted: #999;
+    --sucesso: #4caf50;
+    --erro: #e53935;
+    --aviso: #ff9800;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--preto);
+    color: var(--branco);
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    position: fixed; top: 0; left: 0;
+    width: 240px; height: 100vh;
+    background: var(--cinza-escuro);
+    border-right: 1px solid var(--cinza-borda);
+    display: flex; flex-direction: column;
+    z-index: 100;
+    transition: transform .3s;
+  }
+  .sidebar-logo {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid var(--cinza-borda);
+  }
+  .sidebar-logo .brand {
+    font-size: 1.4rem; font-weight: 800;
+    letter-spacing: .5px;
+  }
+  .sidebar-logo .brand span { color: var(--ouro); }
+  .sidebar-logo .tagline {
+    font-size: .7rem; color: var(--texto-muted);
+    text-transform: uppercase; letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+  .nav-section { padding: 16px 0; }
+  .nav-label {
+    font-size: .65rem; text-transform: uppercase;
+    letter-spacing: 1.8px; color: var(--texto-muted);
+    padding: 6px 24px; margin-bottom: 4px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 24px; cursor: pointer;
+    font-size: .9rem; color: #ccc;
+    transition: background .2s, color .2s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { background: rgba(212,175,55,.08); color: var(--branco); }
+  .nav-item.active {
+    background: rgba(212,175,55,.14);
+    color: var(--ouro);
+    border-left-color: var(--ouro);
+  }
+  .nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+  .sidebar-footer {
+    margin-top: auto; padding: 16px 24px;
+    border-top: 1px solid var(--cinza-borda);
+    font-size: .8rem; color: var(--texto-muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .avatar-sm {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--ouro); color: var(--preto);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: .85rem; flex-shrink: 0;
+  }
+
+  /* ── MAIN ── */
+  .main {
+    margin-left: 240px;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  .topbar {
+    background: var(--cinza-escuro);
+    border-bottom: 1px solid var(--cinza-borda);
+    padding: 14px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar h1 { font-size: 1.05rem; font-weight: 600; color: var(--branco); }
+  .topbar .breadcrumb { font-size: .8rem; color: var(--texto-muted); margin-top: 2px; }
+  .topbar-actions { display: flex; align-items: center; gap: 12px; }
+  .notif-btn {
+    background: none; border: none; cursor: pointer;
+    color: var(--texto-muted); font-size: 1.2rem;
+    position: relative; padding: 4px;
+  }
+  .notif-btn .badge {
+    position: absolute; top: 0; right: 0;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ouro);
+  }
+
+  .content { padding: 28px 32px; flex: 1; }
+
+  /* ── PAGES ── */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--cinza-escuro);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    padding: 24px;
+    transition: border-color .2s;
+  }
+  .card:hover { border-color: rgba(212,175,55,.35); }
+  .card-title {
+    font-size: .8rem; text-transform: uppercase;
+    letter-spacing: 1.5px; color: var(--texto-muted);
+    margin-bottom: 8px;
+  }
+  .card-value {
+    font-size: 2rem; font-weight: 700;
+    color: var(--ouro);
+  }
+  .card-sub { font-size: .8rem; color: var(--texto-muted); margin-top: 4px; }
+
+  .grid-4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-title { font-size: 1.1rem; font-weight: 600; }
+  .section-title span { color: var(--ouro); }
+
+  /* ── BUTTONS ── */
+  .btn {
+    padding: 9px 20px; border-radius: 6px;
+    border: none; cursor: pointer;
+    font-size: .85rem; font-weight: 600;
+    transition: all .2s; letter-spacing: .3px;
+  }
+  .btn-gold {
+    background: var(--ouro); color: var(--preto);
+  }
+  .btn-gold:hover { background: var(--ouro-dark); }
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--cinza-borda);
+    color: var(--branco);
+  }
+  .btn-outline:hover { border-color: var(--ouro); color: var(--ouro); }
+  .btn-danger {
+    background: rgba(229,57,53,.15);
+    border: 1px solid rgba(229,57,53,.4);
+    color: #ff6b6b;
+  }
+  .btn-danger:hover { background: rgba(229,57,53,.25); }
+  .btn-success {
+    background: rgba(76,175,80,.15);
+    border: 1px solid rgba(76,175,80,.4);
+    color: #81c784;
+  }
+  .btn-sm { padding: 5px 12px; font-size: .78rem; }
+
+  /* ── FORMS ── */
+  .form-group { margin-bottom: 18px; }
+  .form-label {
+    display: block; font-size: .8rem;
+    color: var(--texto-muted); margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .form-input, .form-select {
+    width: 100%; padding: 10px 14px;
+    background: var(--cinza-medio);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 6px; color: var(--branco);
+    font-size: .9rem;
+    transition: border-color .2s;
+    outline: none;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--ouro);
+    box-shadow: 0 0 0 2px rgba(212,175,55,.15);
+  }
+  .form-select option { background: var(--cinza-escuro); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* ── TABLE ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; font-size: .72rem;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--texto-muted); padding: 10px 14px;
+    border-bottom: 1px solid var(--cinza-borda);
+  }
+  td {
+    padding: 12px 14px; font-size: .88rem;
+    border-bottom: 1px solid rgba(68,68,68,.5);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(212,175,55,.04); }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 20px;
+    font-size: .72rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .8px;
+  }
+  .badge-gold { background: rgba(212,175,55,.2); color: var(--ouro); }
+  .badge-green { background: rgba(76,175,80,.2); color: #81c784; }
+  .badge-red { background: rgba(229,57,53,.2); color: #ff6b6b; }
+  .badge-gray { background: rgba(153,153,153,.2); color: #bbb; }
+  .badge-blue { background: rgba(33,150,243,.2); color: #90caf9; }
+  .badge::before { content: '●'; font-size: .5rem; }
+
+  /* ── MODALS ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.75);
+    z-index: 200;
+    display: none; align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--cinza-escuro);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 12px;
+    padding: 28px; width: 480px; max-width: 95vw;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 22px;
+  }
+  .modal-title { font-size: 1rem; font-weight: 700; }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: var(--texto-muted); font-size: 1.3rem;
+    line-height: 1;
+  }
+  .modal-close:hover { color: var(--branco); }
+
+  /* ── TOAST ── */
+  .toast-container {
+    position: fixed; top: 20px; right: 20px;
+    z-index: 999; display: flex; flex-direction: column; gap: 10px;
+  }
+  .toast {
+    background: var(--cinza-escuro);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px; padding: 12px 18px;
+    font-size: .85rem; min-width: 260px;
+    display: flex; align-items: center; gap: 10px;
+    animation: slideIn .3s ease;
+    border-left: 3px solid var(--ouro);
+  }
+  .toast.success { border-left-color: var(--sucesso); }
+  .toast.error { border-left-color: var(--erro); }
+  @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── STATUS STEPS ── */
+  .steps { display: flex; gap: 0; margin: 16px 0; }
+  .step {
+    flex: 1; text-align: center; position: relative;
+  }
+  .step::after {
+    content: ''; position: absolute;
+    top: 14px; left: 50%; right: -50%;
+    height: 2px; background: var(--cinza-borda);
+  }
+  .step:last-child::after { display: none; }
+  .step .dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--cinza-medio); border: 2px solid var(--cinza-borda);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .65rem; margin: 0 auto 6px; position: relative; z-index: 1;
+    cursor: pointer; transition: all .2s;
+  }
+  .step.done .dot { background: var(--ouro); border-color: var(--ouro); color: var(--preto); font-weight: 700; }
+  .step.active .dot { border-color: var(--ouro); color: var(--ouro); }
+  .step .label { font-size: .65rem; color: var(--texto-muted); }
+  .step.done .label, .step.active .label { color: var(--ouro); }
+
+  /* ── VEHICLE CARD ── */
+  .vehicle-card {
+    background: var(--cinza-medio);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px; padding: 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    transition: border-color .2s;
+  }
+  .vehicle-card:hover { border-color: rgba(212,175,55,.4); }
+  .vehicle-icon { font-size: 1.8rem; margin-right: 12px; }
+  .vehicle-info .name { font-weight: 600; font-size: .95rem; }
+  .vehicle-info .details { font-size: .78rem; color: var(--texto-muted); margin-top: 2px; }
+  .vehicle-actions { display: flex; gap: 8px; }
+
+  /* ── SCHEDULE CARD ── */
+  .schedule-item {
+    display: flex; gap: 16px; align-items: flex-start;
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(68,68,68,.5);
+  }
+  .schedule-item:last-child { border-bottom: none; }
+  .schedule-time {
+    min-width: 70px; text-align: center;
+    background: rgba(212,175,55,.1);
+    border: 1px solid rgba(212,175,55,.25);
+    border-radius: 6px; padding: 8px;
+  }
+  .schedule-time .hour { font-size: 1rem; font-weight: 700; color: var(--ouro); }
+  .schedule-time .date { font-size: .65rem; color: var(--texto-muted); }
+  .schedule-info .client { font-weight: 600; font-size: .9rem; }
+  .schedule-info .service { font-size: .8rem; color: var(--texto-muted); margin-top: 2px; }
+  .schedule-info .address { font-size: .78rem; color: #aaa; margin-top: 4px; }
+
+  /* ── DIVIDER ── */
+  .divider { border: none; border-top: 1px solid var(--cinza-borda); margin: 24px 0; }
+
+  /* ── MAP LINK ── */
+  .map-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--ouro); text-decoration: none; font-size: .85rem;
+    padding: 6px 14px; border: 1px solid rgba(212,175,55,.3);
+    border-radius: 20px; margin-top: 8px;
+    transition: background .2s;
+  }
+  .map-link:hover { background: rgba(212,175,55,.1); }
+
+  /* ── NOTIFICATION ITEM ── */
+  .notif-item {
+    padding: 14px 0; border-bottom: 1px solid rgba(68,68,68,.5);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .notif-item:last-child { border-bottom: none; }
+  .notif-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ouro); margin-top: 6px; flex-shrink: 0;
+  }
+  .notif-dot.read { background: var(--cinza-borda); }
+  .notif-text { font-size: .85rem; }
+  .notif-time { font-size: .72rem; color: var(--texto-muted); margin-top: 3px; }
+
+  /* ── SERVICE TYPE CARD ── */
+  .service-type {
+    background: var(--cinza-medio);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px; padding: 20px;
+    text-align: center; cursor: pointer;
+    transition: all .2s;
+  }
+  .service-type:hover, .service-type.selected {
+    border-color: var(--ouro);
+    background: rgba(212,175,55,.08);
+  }
+  .service-type .ico { font-size: 2rem; margin-bottom: 8px; }
+  .service-type .name { font-weight: 600; font-size: .9rem; }
+  .service-type .price { color: var(--ouro); font-size: 1rem; font-weight: 700; margin-top: 4px; }
+  .service-type .desc { font-size: .75rem; color: var(--texto-muted); margin-top: 4px; }
+
+  /* ── CONFLICT ALERT ── */
+  .conflict-alert {
+    background: rgba(229,57,53,.1);
+    border: 1px solid rgba(229,57,53,.35);
+    border-radius: 6px; padding: 12px 16px;
+    font-size: .85rem; color: #ff8a80;
+    display: none; align-items: center; gap: 8px;
+    margin-top: 12px;
+  }
+  .conflict-alert.show { display: flex; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .grid-4 { grid-template-columns: repeat(2,1fr); }
+    .grid-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── ROLE SWITCHER ── */
+  .role-switcher {
+    display: flex; gap: 6px; padding: 16px 24px 8px;
+  }
+  .role-btn {
+    flex: 1; padding: 7px 4px; border-radius: 6px;
+    border: 1px solid var(--cinza-borda);
+    background: none; color: #aaa;
+    font-size: .72rem; cursor: pointer; text-align: center;
+    transition: all .2s;
+  }
+  .role-btn.active {
+    background: rgba(212,175,55,.15);
+    border-color: var(--ouro); color: var(--ouro);
+  }
+
+  .empty-state {
+    text-align: center; padding: 48px 20px;
+    color: var(--texto-muted);
+  }
+  .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .empty-state p { font-size: .9rem; }
+
+  .gold-line {
+    height: 3px; background: linear-gradient(90deg, var(--ouro), var(--ouro-dark), transparent);
+    border-radius: 2px; margin-bottom: 28px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">SL <span>Lavação</span></div>
+    <div class="tagline">Delivery Premium</div>
+  </div>
+
+  <div class="role-switcher">
+    <button class="role-btn active" onclick="setRole('cliente')">Cliente</button>
+    <button class="role-btn" onclick="setRole('funcionario')">Func.</button>
+    <button class="role-btn" onclick="setRole('admin')">Admin</button>
+  </div>
+
+  <div id="navMenu"></div>
+
+  <div class="sidebar-footer">
+    <div class="avatar-sm" id="avatarInitial">C</div>
+    <div style="overflow:hidden">
+      <div style="font-weight:600;font-size:.85rem;white-space:nowrap;text-overflow:ellipsis;" id="sidebarUserName">Carlos Lima</div>
+      <div style="font-size:.7rem;color:var(--texto-muted)" id="sidebarRole">Cliente</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div>
+      <h1 id="pageTitle">Início</h1>
+      <div class="breadcrumb" id="pageBreadcrumb">SL Lavação › Início</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="notif-btn" onclick="navigate('notificacoes')">
+        🔔<span class="badge"></span>
+      </button>
+      <button class="btn btn-outline btn-sm">Sair</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ====== DASHBOARD CLIENTE ====== -->
+    <div class="page active" id="page-dashboard">
+      <div class="gold-line"></div>
+      <div class="grid-4">
+        <div class="card">
+          <div class="card-title">Agendamentos</div>
+          <div class="card-value" id="dash-agendamentos">2</div>
+          <div class="card-sub">Próximos serviços</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Veículos</div>
+          <div class="card-value" id="dash-veiculos">2</div>
+          <div class="card-sub">Cadastrados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Pontos</div>
+          <div class="card-value">450</div>
+          <div class="card-sub">Fidelidade</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Economia</div>
+          <div class="card-value">R$ 45</div>
+          <div class="card-sub">Em descontos</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Próximos <span>Agendamentos</span></div>
+            <button class="btn btn-gold btn-sm" onclick="navigate('solicitar')">+ Novo</button>
+          </div>
+          <div id="dash-lista-agendamentos">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-header">
+            <div class="section-title">Meus <span>Veículos</span></div>
+            <button class="btn btn-outline btn-sm" onclick="navigate('veiculos')">Ver todos</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;" id="dash-lista-veiculos">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== CADASTRO USUÁRIO ====== -->
+    <div class="page" id="page-cadastro">
+      <div class="gold-line"></div>
+      <div style="max-width:500px;">
+        <div class="section-header"><div class="section-title">Criar <span>Conta</span></div></div>
+        <div class="card">
+          <div class="form-group">
+            <label class="form-label">Nome Completo</label>
+            <input type="text" class="form-input" placeholder="Seu nome completo">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Telefone</label>
+              <input type="tel" class="form-input" placeholder="(47) 99999-9999">
+            </div>
+            <div class="form-group">
+              <label class="form-label">E-mail</label>
+              <input type="email" class="form-input" placeholder="seu@email.com">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Senha</label>
+              <input type="password" class="form-input" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmar Senha</label>
+              <input type="password" class="form-input" placeholder="••••••••">
+            </div>
+          </div>
+          <button class="btn btn-gold" style="width:100%" onclick="showToast('Conta criada com sucesso! Bem-vindo ao LavaPrime.','success')">Criar Conta</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ENDEREÇOS ====== -->
+    <div class="page" id="page-enderecos">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Meus <span>Endereços</span></div>
+        <button class="btn btn-gold btn-sm" onclick="openModal('modalEndereco')">+ Adicionar</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;" id="listaEnderecos">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== VEÍCULOS ====== -->
+    <div class="page" id="page-veiculos">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Meus <span>Veículos</span></div>
+        <button class="btn btn-gold btn-sm" onclick="openModal('modalVeiculo')">+ Cadastrar</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;" id="listaVeiculos">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== SOLICITAR SERVIÇO ====== -->
+    <div class="page" id="page-solicitar">
+      <div class="gold-line"></div>
+      <div class="section-title" style="margin-bottom:20px;">Nova <span style="color:var(--ouro)">Solicitação</span></div>
+      <div class="card" style="max-width:620px;">
+        <div style="margin-bottom:20px;">
+          <div class="form-label" style="margin-bottom:12px;">Tipo de Lavagem</div>
+          <div class="grid-3" id="selectTipoServico">
+            <!-- Preenchido via JS -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Veículo</label>
+          <select class="form-select" id="selectVeiculo" onchange="checkConflict()">
+            <option value="">Selecionar veículo…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Endereço de Atendimento</label>
+          <select class="form-select" id="selectEndereco">
+            <option value="">Selecionar endereço…</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Data</label>
+            <input type="date" class="form-input" id="dataServico" onchange="checkConflict()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Horário</label>
+            <input type="time" class="form-input" id="horaServico" onchange="checkConflict()">
+          </div>
+        </div>
+        <div class="conflict-alert" id="conflictAlert">
+          ⚠️ <span id="conflictMsg">Conflito de horário detectado para este veículo.</span>
+        </div>
+        <button class="btn btn-gold" style="width:100%;margin-top:8px;" onclick="solicitarServico()">Confirmar Agendamento</button>
+      </div>
+    </div>
+
+    <!-- ====== HISTÓRICO ====== -->
+    <div class="page" id="page-historico">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Histórico de <span>Pedidos</span></div>
+        <select class="form-select" style="width:160px;padding:7px 12px;font-size:.82rem;">
+          <option>Todos</option><option>Concluídos</option><option>Cancelados</option>
+        </select>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Serviço</th><th>Veículo</th><th>Data</th><th>Valor</th><th>Status</th><th>Ação</th>
+              </tr>
+            </thead>
+            <tbody id="corpoHistorico">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== NOTIFICAÇÕES ====== -->
+    <div class="page" id="page-notificacoes">
+      <div class="gold-line"></div>
+      <div class="section-title" style="margin-bottom:20px;">Notificações <span style="color:var(--ouro)">Automáticas</span></div>
+      <div class="card" style="max-width:600px;" id="listaNotificacoes">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== DEMANDAS FUNCIONÁRIO ====== -->
+    <div class="page" id="page-demandas">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Demandas <span>Disponíveis</span></div>
+        <span class="badge badge-gold">Região: Joinville Norte</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;" id="listaDemandas">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== ATUALIZAÇÃO STATUS ====== -->
+    <div class="page" id="page-status">
+      <div class="gold-line"></div>
+      <div class="section-title" style="margin-bottom:20px;">Atualizar <span style="color:var(--ouro)">Status</span></div>
+      <div id="statusContainer">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== DEMANDAS CONCLUÍDAS (FUNCIONÁRIO) ====== -->
+    <div class="page" id="page-concluidas">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Demandas <span>Concluídas</span></div>
+        <span class="badge badge-green" id="badge-total-concluidas">0 serviços</span>
+      </div>
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-title">Total Concluídos</div>
+          <div class="card-value" style="color:#81c784;" id="func-total-concluidos">0</div>
+          <div class="card-sub">Serviços finalizados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Valor Total</div>
+          <div class="card-value" id="func-valor-total">R$ 0,00</div>
+          <div class="card-sub">Gerado em serviços</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Último Serviço</div>
+          <div class="card-value" style="font-size:1rem;" id="func-ultimo-servico">—</div>
+          <div class="card-sub">Mais recente</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Serviço</th><th>Veículo</th><th>Data/Hora</th><th>Endereço</th><th>Valor</th><th>Concluído em</th></tr>
+            </thead>
+            <tbody id="corpoConcluidas">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== AGENDA FUNCIONÁRIO ====== -->
+    <div class="page" id="page-agenda">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Minha <span>Agenda</span></div>
+        <span style="font-size:.82rem;color:var(--texto-muted);">Semana de 10–16 Jun 2026</span>
+      </div>
+      <div class="card" id="listaAgenda">
+        <!-- Preenchido via JS -->
+      </div>
+    </div>
+
+    <!-- ====== GESTÃO DE SERVIÇOS ADMIN ====== -->
+    <div class="page" id="page-servicos">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Tipos de <span>Lavagem</span></div>
+        <button class="btn btn-gold btn-sm" onclick="abrirNovoServico()">+ Novo Tipo</button>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tipo</th><th>Descrição</th><th>Preço Base</th><th>Duração</th><th>Status</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="corpoServicos">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== GESTÃO DE FUNCIONÁRIOS (ADMIN) ====== -->
+    <div class="page" id="page-funcionarios">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Gestão de <span>Funcionários</span></div>
+        <button class="btn btn-gold btn-sm" onclick="openModalFuncionario()">+ Cadastrar</button>
+      </div>
+
+      <div class="grid-4" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-title">Total</div>
+          <div class="card-value" id="totalFuncionarios">0</div>
+          <div class="card-sub">Cadastrados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Ativos</div>
+          <div class="card-value" style="color:#81c784;" id="totalAtivos">0</div>
+          <div class="card-sub">Em operação</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Inativos</div>
+          <div class="card-value" style="color:#ff6b6b;" id="totalInativos">0</div>
+          <div class="card-sub">Desativados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Regiões</div>
+          <div class="card-value">2</div>
+          <div class="card-sub">Cobertas</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="margin-bottom:16px;display:flex;gap:10px;">
+          <input type="text" class="form-input" placeholder="🔍 Buscar funcionário por nome ou região…" style="max-width:360px;" oninput="filtrarFuncionarios(this.value)">
+          <select class="form-select" style="max-width:180px;" onchange="filtrarPorStatus(this.value)">
+            <option value="">Todos os status</option>
+            <option value="Ativo">Ativos</option>
+            <option value="Inativo">Inativos</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th><th>Nome</th><th>Telefone</th><th>E-mail</th><th>Região</th><th>Status</th><th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="corpoFuncionarios">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== FINANCEIRO (ADMIN) ====== -->
+    <div class="page" id="page-financeiro">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Gestão <span>Financeira</span></div>
+      </div>
+
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-title">Total Ganho</div>
+          <div class="card-value" style="color:#81c784;" id="financeiro-ganho">R$ 0,00</div>
+          <div class="card-sub">Serviços concluídos</div>
+        </div>
+        <div class="card">
+          <div class="card-title">A Ganhar</div>
+          <div class="card-value" style="color:var(--ouro);" id="financeiro-a-ganhar">R$ 0,00</div>
+          <div class="card-sub">Serviços agendados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Total Geral</div>
+          <div class="card-value" id="financeiro-total">R$ 0,00</div>
+          <div class="card-sub">Volume total</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title" style="margin-bottom:16px;">Detalhamento de <span>Transações</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Data</th><th>Serviço</th><th>Cliente</th><th>Valor</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="corpoFinanceiro">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ══════════ MODAIS ══════════ -->
+
+<!-- Modal Endereço -->
+<div class="modal-overlay" id="modalEndereco">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cadastrar Endereço</div>
+      <button class="modal-close" onclick="closeModal('modalEndereco')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Identificação (apelido)</label>
+      <input type="text" class="form-input" id="endApelido" placeholder="Ex: Casa, Trabalho, Academia">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">CEP</label>
+        <input type="text" class="form-input" id="endCep" placeholder="00000-000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Número</label>
+        <input type="text" class="form-input" id="endNumero" placeholder="123">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rua / Logradouro</label>
+      <input type="text" class="form-input" id="endRua" placeholder="Nome da rua">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Bairro</label>
+        <input type="text" class="form-input" id="endBairro" placeholder="Bairro">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cidade</label>
+        <input type="text" class="form-input" id="endCidade" placeholder="Cidade">
+      </div>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="salvarEndereco()">Salvar Endereço</button>
+  </div>
+</div>
+
+<!-- Modal Veículo -->
+<div class="modal-overlay" id="modalVeiculo">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cadastrar Veículo</div>
+      <button class="modal-close" onclick="closeModal('modalVeiculo')">✕</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Modelo</label>
+        <input type="text" class="form-input" id="veicModelo" placeholder="Ex: Honda Civic">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Placa</label>
+        <input type="text" class="form-input" id="veicPlaca" placeholder="ABC-1234" style="text-transform:uppercase">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Cor</label>
+        <input type="text" class="form-input" id="veicCor" placeholder="Ex: Prata">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Categoria</label>
+        <select class="form-select" id="veicCategoria">
+          <option value="">Selecione…</option>
+          <option>Hatch</option><option>Sedan</option><option>SUV</option>
+          <option>Caminhonete</option><option>Van</option><option>Outro</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="salvarVeiculo()">Salvar Veículo</button>
+  </div>
+</div>
+
+<!-- Modal Serviço Admin -->
+<div class="modal-overlay" id="modalServico">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalServicoTitulo">Tipo de Lavagem</div>
+      <button class="modal-close" onclick="closeModal('modalServico')">✕</button>
+    </div>
+    <input type="hidden" id="servEditIndex" value="">
+    <div class="form-group">
+      <label class="form-label">Nome do Serviço</label>
+      <input type="text" class="form-input" id="servNome" placeholder="Ex: Lavagem Simples">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Descrição</label>
+      <input type="text" class="form-input" id="servDesc" placeholder="Descrição do serviço">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Preço Base (R$)</label>
+        <input type="number" class="form-input" id="servPreco" placeholder="0,00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Duração Estimada</label>
+        <input type="text" class="form-input" id="servDuracao" placeholder="Ex: 45 min">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="servStatus">
+        <option>Ativo</option><option>Inativo</option>
+      </select>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="salvarServicoAdmin()">Salvar Serviço</button>
+  </div>
+</div>
+
+<!-- Modal Cancelamento -->
+<div class="modal-overlay" id="modalCancelar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Cancelar Agendamento</div>
+      <button class="modal-close" onclick="closeModal('modalCancelar')">✕</button>
+    </div>
+    <div id="cancelContent"></div>
+  </div>
+</div>
+
+<!-- Modal Funcionário -->
+<div class="modal-overlay" id="modalFuncionario">
+  <div class="modal" style="width:520px;">
+    <div class="modal-header">
+      <div class="modal-title" id="modalFuncionarioTitulo">Cadastrar Funcionário</div>
+      <button class="modal-close" onclick="closeModal('modalFuncionario')">✕</button>
+    </div>
+    <input type="hidden" id="funcEditIndex" value="">
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Nome Completo</label>
+        <input type="text" class="form-input" id="funcNome" placeholder="Nome do funcionário">
+      </div>
+      <div class="form-group">
+        <label class="form-label">CPF</label>
+        <input type="text" class="form-input" id="funcCpf" placeholder="000.000.000-00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Telefone</label>
+        <input type="tel" class="form-input" id="funcTel" placeholder="(47) 99999-9999">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" class="form-input" id="funcEmail" placeholder="func@email.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Região de Atuação</label>
+        <input type="text" class="form-input" id="funcRegiao" placeholder="Ex: Joinville Norte">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="funcStatus">
+          <option value="Ativo">Ativo</option>
+          <option value="Inativo">Inativo</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn btn-gold" style="width:100%" onclick="salvarFuncionario()">Salvar Funcionário</button>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let currentRole = 'cliente';
+let currentPage = 'dashboard';
+let stepIndex = 1;
+
+const stepLabels = ['Aceito','Deslocamento','No Local','Em Serviço','Concluído'];
+
+// Dados em Memória
+let veiculos = [
+  { modelo: 'Honda Civic', placa: 'ABC-1234', cor: 'Prata', categoria: 'Sedan', status: 'Ativo' },
+  { modelo: 'Toyota RAV4', placa: 'DEF-5678', cor: 'Branco', categoria: 'SUV', status: 'Ativo' }
+];
+
+let enderecos = [
+  { apelido: 'Casa', rua: 'Rua das Flores', numero: '123', bairro: 'Centro', cidade: 'Joinville-SC', cep: '89201-000', principal: true },
+  { apelido: 'Trabalho', rua: 'Av. Principal', numero: '456', bairro: 'Boa Vista', cidade: 'Joinville-SC', cep: '89205-100', principal: false }
+];
+
+let tiposServicos = [
+  { id: 1, nome: 'Simples', preco: 35, desc: 'Exterior completo', duracao: '45 min', status: 'Ativo', icon: '🫧' },
+  { id: 2, nome: 'Completa', preco: 75, desc: 'Ext. + interior', duracao: '90 min', status: 'Ativo', icon: '✨' },
+  { id: 3, nome: 'Premium', preco: 150, desc: 'Polimento incluso', duracao: '3 horas', status: 'Ativo', icon: '💎' }
+];
+
+let agendamentos = [
+  { id: '0041', servico: 'Lavagem Completa', veiculo: 'Honda Civic', placa: 'ABC-1234', data: '2026-06-12', hora: '14:00', valor: 75, status: 'Confirmado', endereco: 'Rua das Flores, 123' },
+  { id: '0040', servico: 'Lavagem Simples', veiculo: 'Toyota RAV4', placa: 'DEF-5678', data: '2026-06-13', hora: '09:00', valor: 35, status: 'Pendente', endereco: 'Av. Principal, 456' }
+];
+
+let demandasDisponiveis = [
+  { id: '0042', servico: 'Lavagem Completa', veiculo: 'Honda Civic', placa: 'ABC-1234', data: '2026-06-12', hora: '16:00', valor: 75, categoria: 'Sedan', endereco: 'Rua XV de Novembro, 88 — Joinville-SC' },
+  { id: '0043', servico: 'Lavagem Simples', veiculo: 'Fiat Uno', placa: 'GHI-9012', data: '2026-06-13', hora: '08:30', valor: 35, categoria: 'Hatch', endereco: 'Rua Blumenau, 200 — Joinville-SC' }
+];
+
+let servicoAtualFuncionario = null;
+let demandasConcluidas = [];
+
+let funcionarios = [
+  { id:1, nome:'João Silva', cpf:'111.222.333-44', tel:'(47) 98888-1111', email:'joao@sl.com', regiao:'Joinville Norte', status:'Ativo' },
+  { id:2, nome:'Marina Costa', cpf:'222.333.444-55', tel:'(47) 97777-2222', email:'marina@sl.com', regiao:'Joinville Sul', status:'Ativo' },
+  { id:3, nome:'Ricardo Leal', cpf:'333.444.555-66', tel:'(47) 96666-3333', email:'ricardo@sl.com', regiao:'Joinville Norte', status:'Inativo' },
+];
+
+let notificacoes = [
+  { id: 1, texto: '✅ <b>João Silva</b> aceitou seu agendamento de <b>Lavagem Completa</b> para hoje às 14h.', tempo: 'Há 15 minutos', lida: false },
+  { id: 2, texto: '🚗 Seu serviço de <b>Lavagem Simples</b> foi <b>concluído</b> com sucesso!', tempo: 'Ontem, 09:48', lida: false }
+];
+
+let selectedServiceType = 'Simples';
+
+const menus = {
+  cliente: [
+    { id:'dashboard', icon:'🏠', label:'Início' },
+    { id:'solicitar', icon:'🚿', label:'Solicitar Serviço' },
+    { id:'historico', icon:'📋', label:'Histórico de Pedidos' },
+    { id:'veiculos', icon:'🚗', label:'Meus Veículos' },
+    { id:'enderecos', icon:'📍', label:'Endereços' },
+    { id:'notificacoes', icon:'🔔', label:'Notificações' },
+  ],
+  funcionario: [
+    { id:'demandas', icon:'📦', label:'Demandas Disponíveis' },
+    { id:'concluidas', icon:'✅', label:'Demandas Concluídas' },
+    { id:'status', icon:'🔄', label:'Atualizar Status' },
+    { id:'agenda', icon:'📅', label:'Minha Agenda' },
+    { id:'notificacoes', icon:'🔔', label:'Notificações' },
+  ],
+  admin: [
+    { id:'demandas', icon:'📦', label:'Demandas Disponíveis' },
+    { id:'servicos', icon:'⚙️', label:'Gestão de Serviços' },
+    { id:'funcionarios', icon:'👷', label:'Gestão de Funcionários' },
+    { id:'financeiro', icon:'💰', label:'Financeiro' },
+    { id:'notificacoes', icon:'🔔', label:'Notificações' },
+  ]
+};
+
+const roleLabels = { cliente:'Cliente', funcionario:'Funcionário', admin:'Administrador' };
+const roleNames  = { cliente:'Carlos Lima', funcionario:'João Silva', admin:'Admin Master' };
+
+function setRole(role) {
+  currentRole = role;
+  document.querySelectorAll('.role-btn').forEach((b, i) => {
+    b.classList.toggle('active', ['cliente','funcionario','admin'][i] === role);
+  });
+  document.getElementById('sidebarUserName').textContent = roleNames[role];
+  document.getElementById('sidebarRole').textContent = roleLabels[role];
+  document.getElementById('avatarInitial').textContent = roleNames[role][0];
+  buildNav(role);
+  navigate(menus[role][0].id);
+}
+
+function buildNav(role) {
+  const nav = document.getElementById('navMenu');
+  nav.innerHTML = '<div class="nav-section">' +
+    menus[role].map(m =>
+      `<div class="nav-item${m.id===currentPage?' active':''}" onclick="navigate('${m.id}')">
+        <span class="icon">${m.icon}</span>${m.label}
+      </div>`
+    ).join('') + '</div>';
+}
+
+function navigate(pageId) {
+  currentPage = pageId;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + pageId);
+  if (target) target.classList.add('active');
+  buildNav(currentRole);
+  const meta = [...menus.cliente, ...menus.funcionario, ...menus.admin].find(m => m.id === pageId);
+  document.getElementById('pageTitle').textContent = meta ? meta.label : pageId;
+  document.getElementById('pageBreadcrumb').textContent = `SL Lavação › ${meta ? meta.label : pageId}`;
+  
+  // Refresh data based on page
+  renderCurrentPageData(pageId);
+}
+
+function renderCurrentPageData(pageId) {
+  switch(pageId) {
+    case 'dashboard': renderDashboard(); break;
+    case 'veiculos': renderVeiculos(); break;
+    case 'enderecos': renderEnderecos(); break;
+    case 'solicitar': renderSolicitar(); break;
+    case 'historico': renderHistorico(); break;
+    case 'notificacoes': renderNotificacoes(); break;
+    case 'concluidas': renderConcluidas(); break;
+    case 'demandas': renderDemandas(); break;
+    case 'status': renderStatus(); break;
+    case 'agenda': renderAgenda(); break;
+    case 'servicos': renderServicosAdmin(); break;
+    case 'funcionarios': renderFuncionarios(); break;
+    case 'financeiro': renderFinanceiro(); break;
+  }
+}
+
+// ── RENDERERS ──
+
+function renderDashboard() {
+  document.getElementById('dash-agendamentos').textContent = agendamentos.filter(a => a.status !== 'Concluído' && a.status !== 'Cancelado').length;
+  document.getElementById('dash-veiculos').textContent = veiculos.length;
+
+  const listaAgend = document.getElementById('dash-lista-agendamentos');
+  const proximos = agendamentos.filter(a => a.status !== 'Concluído' && a.status !== 'Cancelado').slice(0, 2);
+  
+  if (proximos.length === 0) {
+    listaAgend.innerHTML = '<div class="empty-state">Nenhum agendamento próximo.</div>';
+  } else {
+    listaAgend.innerHTML = proximos.map(a => `
+      <div class="schedule-item">
+        <div class="schedule-time">
+          <div class="hour">${a.hora}</div>
+          <div class="date">${a.data === new Date().toISOString().split('T')[0] ? 'Hoje' : a.data}</div>
+        </div>
+        <div class="schedule-info" style="flex:1">
+          <div class="client">${a.servico}</div>
+          <div class="service">${a.veiculo} · ${a.placa}</div>
+          <div class="address">📍 ${a.endereco}</div>
+        </div>
+        <span class="badge ${a.status==='Confirmado'?'badge-gold':'badge-blue'}">${a.status}</span>
+      </div>
+    `).join('');
+  }
+
+  const listaVeic = document.getElementById('dash-lista-veiculos');
+  listaVeic.innerHTML = veiculos.slice(0, 2).map(v => `
+    <div class="vehicle-card">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div class="vehicle-icon">${v.categoria === 'SUV' ? '🚙' : '🚗'}</div>
+        <div class="vehicle-info">
+          <div class="name">${v.modelo}</div>
+          <div class="details">${v.placa} · ${v.cor} · ${v.categoria}</div>
+        </div>
+      </div>
+      <span class="badge badge-green">Ativo</span>
+    </div>
+  `).join('');
+}
+
+function renderVeiculos() {
+  const container = document.getElementById('listaVeiculos');
+  container.innerHTML = veiculos.map((v, i) => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="font-size:2.2rem;">${v.categoria === 'SUV' ? '🚙' : '🚗'}</div>
+          <div>
+            <div style="font-weight:700;font-size:1rem;">${v.modelo}</div>
+            <div style="font-size:.82rem;color:var(--texto-muted);margin-top:3px;">Placa: <b style="color:var(--ouro)">${v.placa}</b> · Cor: ${v.cor}</div>
+            <div style="margin-top:4px;"><span class="badge badge-gray">${v.categoria}</span></div>
+          </div>
+        </div>
+        <div class="vehicle-actions">
+          <button class="btn btn-outline btn-sm">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="removerVeiculo(${i})">Remover</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEnderecos() {
+  const container = document.getElementById('listaEnderecos');
+  container.innerHTML = enderecos.map((e, i) => `
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-weight:600;">${e.apelido === 'Casa' ? '🏠' : '🏢'} ${e.apelido}</div>
+        <div style="font-size:.85rem;color:var(--texto-muted);margin-top:4px;">${e.rua}, ${e.numero} · Bairro ${e.bairro} · ${e.cidade}</div>
+        <div style="font-size:.75rem;color:#aaa;margin-top:2px;">CEP ${e.cep}</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        ${e.principal ? '<span class="badge badge-gold">Principal</span>' : `<button class="btn btn-outline btn-sm" onclick="tornarEnderecoPrincipal(${i})">Tornar Principal</button>`}
+        <button class="btn btn-danger btn-sm" onclick="removerEndereco(${i})">Remover</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderSolicitar() {
+  const grid = document.getElementById('selectTipoServico');
+  grid.innerHTML = tiposServicos.filter(s => s.status === 'Ativo').map(s => `
+    <div class="service-type ${selectedServiceType === s.nome ? 'selected' : ''}" onclick="selectService(this,'${s.nome}')">
+      <div class="ico">${s.icon}</div>
+      <div class="name">${s.nome}</div>
+      <div class="price">R$ ${s.preco}</div>
+      <div class="desc">${s.desc}</div>
+    </div>
+  `).join('');
+
+  const selVeic = document.getElementById('selectVeiculo');
+  selVeic.innerHTML = '<option value="">Selecionar veículo…</option>' + 
+    veiculos.map(v => `<option value="${v.placa}">${v.modelo} · ${v.placa}</option>`).join('');
+
+  const selEnd = document.getElementById('selectEndereco');
+  selEnd.innerHTML = '<option value="">Selecionar endereço…</option>' + 
+    enderecos.map(e => `<option value="${e.rua}, ${e.numero}">${e.apelido} — ${e.rua}, ${e.numero}</option>`).join('');
+}
+
+function renderHistorico() {
+  const tbody = document.getElementById('corpoHistorico');
+  tbody.innerHTML = agendamentos.map(a => `
+    <tr>
+      <td style="color:var(--texto-muted)">#${a.id}</td>
+      <td>${a.servico}</td>
+      <td>${a.veiculo}</td>
+      <td>${a.data} ${a.hora}</td>
+      <td style="color:var(--ouro);font-weight:600;">R$ ${a.valor}</td>
+      <td><span class="badge ${a.status==='Concluído'?'badge-green':a.status==='Cancelado'?'badge-red':'badge-gold'}">${a.status}</span></td>
+      <td>${a.status === 'Confirmado' || a.status === 'Pendente' ? `<button class="btn btn-danger btn-sm" onclick="cancelarAgendamento('${a.id}')">Cancelar</button>` : '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderNotificacoes() {
+  const container = document.getElementById('listaNotificacoes');
+  container.innerHTML = notificacoes.map(n => `
+    <div class="notif-item">
+      <div class="notif-dot ${n.lida ? 'read' : ''}"></div>
+      <div>
+        <div class="notif-text">${n.texto}</div>
+        <div class="notif-time">${n.tempo}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderDemandas() {
+  const container = document.getElementById('listaDemandas');
+  if (demandasDisponiveis.length === 0) {
+    container.innerHTML = '<div class="empty-state">Nenhuma demanda disponível no momento.</div>';
+    return;
+  }
+  container.innerHTML = demandasDisponiveis.map((d, i) => `
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div style="font-weight:700;">${d.servico} · ${d.veiculo}</div>
+          <div style="font-size:.82rem;color:var(--texto-muted);margin-top:4px;">📅 ${d.data} às ${d.hora} · ${d.placa} · ${d.categoria}</div>
+          <div style="font-size:.82rem;color:#aaa;margin-top:2px;">📍 ${d.endereco}</div>
+          <a href="https://maps.google.com/?q=${encodeURIComponent(d.endereco)}" target="_blank" class="map-link">🗺️ Abrir no GPS</a>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:1.2rem;font-weight:700;color:var(--ouro);">R$ ${d.valor}</div>
+          ${currentRole === 'funcionario' ? `<button class="btn btn-gold btn-sm" style="margin-top:10px;" onclick="aceitarServico(${i})">Aceitar</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderStatus() {
+  const container = document.getElementById('statusContainer');
+  if (!servicoAtualFuncionario) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🔄</div><p>Nenhum serviço em andamento no momento.</p></div>';
+    return;
+  }
+  
+  container.innerHTML = `
+    <div class="card" style="max-width:580px;" id="statusCard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:1rem;">${servicoAtualFuncionario.servico} · ${servicoAtualFuncionario.veiculo}</div>
+          <div style="font-size:.82rem;color:var(--texto-muted);margin-top:4px;">Placa: ${servicoAtualFuncionario.placa}</div>
+          <div style="font-size:.82rem;color:#aaa;">📍 ${servicoAtualFuncionario.endereco}</div>
+          <a href="https://maps.google.com/?q=${encodeURIComponent(servicoAtualFuncionario.endereco)}" target="_blank" class="map-link">🗺️ Abrir no GPS</a>
+        </div>
+        <span class="badge badge-gold" id="statusBadge">${stepLabels[stepIndex]}</span>
+      </div>
+      <div class="steps" id="statusSteps">
+        ${stepLabels.map((label, i) => `
+          <div class="step ${i < stepIndex ? 'done' : i === stepIndex ? 'active' : ''}" onclick="advanceStep(${i})">
+            <div class="dot">${i < stepIndex ? '✓' : i === stepIndex ? '▶' : i + 1}</div>
+            <div class="label">${label}</div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn btn-gold" style="width:100%;margin-top:16px;" onclick="nextStep()">Avançar Etapa →</button>
+    </div>
+  `;
+}
+
+function renderAgenda() {
+  const container = document.getElementById('listaAgenda');
+  const agenda = agendamentos.filter(a => a.status === 'Confirmado');
+  
+  if (agenda.length === 0) {
+    container.innerHTML = '<div class="empty-state">Sua agenda está vazia.</div>';
+    return;
+  }
+
+  container.innerHTML = agenda.map(a => `
+    <div class="schedule-item">
+      <div class="schedule-time"><div class="hour">${a.hora}</div><div class="date">${a.data}</div></div>
+      <div class="schedule-info" style="flex:1">
+        <div class="client">${a.servico}</div>
+        <div class="service">${a.veiculo} · ${a.placa}</div>
+        <div class="address">📍 ${a.endereco}</div>
+      </div>
+      <span class="badge badge-gold">${a.status}</span>
+    </div>
+  `).join('');
+}
+
+function renderConcluidas() {
+  const total = demandasConcluidas.length;
+  const valorTotal = demandasConcluidas.reduce((acc, d) => acc + (d.valor || 0), 0);
+  document.getElementById('func-total-concluidos').textContent = total;
+  document.getElementById('func-valor-total').textContent = `R$ ${valorTotal.toFixed(2)}`;
+  document.getElementById('badge-total-concluidas').textContent = `${total} serviço${total !== 1 ? 's' : ''}`;
+  document.getElementById('func-ultimo-servico').textContent = total > 0 ? demandasConcluidas[0].servico : '—';
+
+  const tbody = document.getElementById('corpoConcluidas');
+  if (total === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--texto-muted);padding:32px;">Nenhum serviço concluído ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = demandasConcluidas.map(d => `
+    <tr>
+      <td style="color:var(--texto-muted);font-size:.78rem;">#${d.id}</td>
+      <td><b>${d.servico}</b></td>
+      <td>${d.veiculo} · <span style="color:var(--ouro)">${d.placa}</span></td>
+      <td>${d.data} às ${d.hora}</td>
+      <td style="font-size:.8rem;color:#aaa;">${d.endereco}</td>
+      <td style="color:var(--ouro);font-weight:700;">R$ ${(d.valor||0).toFixed(2)}</td>
+      <td style="font-size:.78rem;color:#81c784;">${d.concluidoEm || '—'}</td>
+    </tr>
+  `).join('');
+}
+
+function renderServicosAdmin() {
+  const tbody = document.getElementById('corpoServicos');
+  tbody.innerHTML = tiposServicos.map((s, i) => `
+    <tr>
+      <td><b>${s.icon} ${s.nome}</b></td>
+      <td style="color:var(--texto-muted)">${s.desc}</td>
+      <td style="color:var(--ouro);font-weight:700;">R$ ${s.preco},00</td>
+      <td>~${s.duracao}</td>
+      <td><span class="badge ${s.status==='Ativo'?'badge-green':'badge-gray'}">${s.status}</span></td>
+      <td><button class="btn btn-outline btn-sm" onclick="editarServico(${i})">Editar</button></td>
+    </tr>
+  `).join('');
+}
+
+function renderFuncionarios() {
+  const tbody = document.getElementById('corpoFuncionarios');
+  tbody.innerHTML = funcionarios.map(f => `
+    <tr>
+      <td style="color:var(--texto-muted);font-size:.78rem;">#${String(f.id).padStart(3,'0')}</td>
+      <td><b>${f.nome}</b></td>
+      <td style="color:#ccc;">${f.tel}</td>
+      <td style="color:#aaa;font-size:.82rem;">${f.email}</td>
+      <td><span style="font-size:.82rem;color:var(--ouro);">📍 ${f.regiao}</span></td>
+      <td><span class="badge ${f.status==='Ativo'?'badge-green':'badge-red'}">${f.status}</span></td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="editarFuncionario(${f.id})">Editar</button>
+          <button class="btn btn-danger btn-sm" onclick="toggleStatusFuncionario(${f.id})">${f.status==='Ativo'?'Desativar':'Ativar'}</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  const ativos = funcionarios.filter(f=>f.status==='Ativo').length;
+  document.getElementById('totalFuncionarios').textContent = funcionarios.length;
+  document.getElementById('totalAtivos').textContent = ativos;
+  document.getElementById('totalInativos').textContent = funcionarios.length - ativos;
+}
+
+function renderFinanceiro() {
+  // Combina agendamentos concluídos com demandas concluídas pelo funcionário
+  const agendConcluidos = agendamentos.filter(a => a.status === 'Concluído');
+  const ganhos = agendConcluidos.reduce((acc, a) => acc + a.valor, 0)
+                + demandasConcluidas.reduce((acc, d) => acc + (d.valor||0), 0);
+  const aGanhar = agendamentos.filter(a => a.status === 'Confirmado' || a.status === 'Pendente').reduce((acc, a) => acc + a.valor, 0);
+  
+  document.getElementById('financeiro-ganho').textContent = `R$ ${ganhos.toFixed(2)}`;
+  document.getElementById('financeiro-a-ganhar').textContent = `R$ ${aGanhar.toFixed(2)}`;
+  document.getElementById('financeiro-total').textContent = `R$ ${(ganhos + aGanhar).toFixed(2)}`;
+
+  // Todas as transações: agendamentos + demandas concluídas pelos funcionários
+  const todasTransacoes = [
+    ...agendamentos.map(a => ({
+      data: a.data, servico: a.servico, funcionario: 'Carlos Lima',
+      valor: a.valor, status: a.status, origem: 'agendamento'
+    })),
+    ...demandasConcluidas.map(d => ({
+      data: d.data, servico: d.servico, funcionario: roleNames.funcionario,
+      valor: d.valor || 0, status: 'Concluído', origem: 'funcionario'
+    }))
+  ];
+
+  const tbody = document.getElementById('corpoFinanceiro');
+  tbody.innerHTML = todasTransacoes.map(a => `
+    <tr>
+      <td>${a.data}</td>
+      <td>${a.servico}</td>
+      <td style="font-size:.82rem;color:#ccc;">${a.funcionario}</td>
+      <td style="font-weight:600;color:var(--ouro)">R$ ${(a.valor||0).toFixed(2)}</td>
+      <td><span class="badge ${a.status==='Concluído'?'badge-green':a.status==='Cancelado'?'badge-red':'badge-gold'}">${a.status}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ── ACTIONS ──
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function cancelarAgendamento(id) {
+  const agend = agendamentos.find(a => String(a.id) === String(id));
+  if (!agend) return;
+
+  // Verificar antecedência mínima de 2 horas
+  const [ano, mes, dia] = agend.data.split('-').map(Number);
+  const [hora, min] = agend.hora.split(':').map(Number);
+  const dataHoraAgend = new Date(ano, mes - 1, dia, hora, min, 0);
+  const agora = new Date();
+  const diffHoras = (dataHoraAgend - agora) / (1000 * 60 * 60);
+
+  if (diffHoras < 2) {
+    showToast('Cancelamento não permitido. É necessário pelo menos 2 horas de antecedência.', 'error');
+    return;
+  }
+
+  // Exibe modal de confirmação próprio
+  const overlay = document.getElementById('modalCancelar');
+  document.getElementById('cancelContent').innerHTML = `
+    <p style="margin-bottom:18px;color:#ccc;">Deseja realmente cancelar o agendamento <b style="color:var(--ouro)">#${agend.id}</b>?</p>
+    <p style="font-size:.85rem;color:var(--texto-muted);margin-bottom:24px;">${agend.servico} · ${agend.veiculo} · ${agend.data} às ${agend.hora}</p>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-danger" style="flex:1" onclick="confirmarCancelamento('${id}')">Sim, cancelar</button>
+      <button class="btn btn-outline" style="flex:1" onclick="closeModal('modalCancelar')">Voltar</button>
+    </div>
+  `;
+  openModal('modalCancelar');
+}
+
+function confirmarCancelamento(id) {
+  closeModal('modalCancelar');
+  const idx = agendamentos.findIndex(a => String(a.id) === String(id));
+  if (idx >= 0) agendamentos.splice(idx, 1);
+
+  const dIdx = demandasDisponiveis.findIndex(d => String(d.id) === String(id));
+  if (dIdx >= 0) demandasDisponiveis.splice(dIdx, 1);
+
+  showToast('Agendamento cancelado com sucesso.', 'success');
+  renderHistorico();
+  renderDashboard();
+}
+
+function salvarEndereco() {
+  const apelido = document.getElementById('endApelido').value;
+  const rua = document.getElementById('endRua').value;
+  const num = document.getElementById('endNumero').value;
+  const bairro = document.getElementById('endBairro').value;
+  const cidade = document.getElementById('endCidade').value;
+  const cep = document.getElementById('endCep').value;
+
+  if(!apelido || !rua || !num) { showToast('Preencha os campos obrigatórios.', 'error'); return; }
+
+  enderecos.push({ apelido, rua, numero: num, bairro, cidade, cep, principal: false });
+  closeModal('modalEndereco');
+  showToast('Endereço cadastrado com sucesso!', 'success');
+  renderEnderecos();
+}
+
+function removerEndereco(i) {
+  enderecos.splice(i, 1);
+  renderEnderecos();
+  showToast('Endereço removido.', 'info');
+}
+
+function tornarEnderecoPrincipal(i) {
+  enderecos.forEach((e, idx) => e.principal = (idx === i));
+  renderEnderecos();
+}
+
+function salvarVeiculo() {
+  const modelo = document.getElementById('veicModelo').value;
+  const placa = document.getElementById('veicPlaca').value;
+  const cor = document.getElementById('veicCor').value;
+  const categoria = document.getElementById('veicCategoria').value;
+
+  if(!modelo || !placa) { showToast('Preencha os campos obrigatórios.', 'error'); return; }
+  if(placa.replace('-','').replace(/\s/g,'').length !== 7) { showToast('A placa deve conter exatamente 7 caracteres (ex: ABC-1234 ou BRA2E19).', 'error'); return; }
+
+  veiculos.push({ modelo, placa, cor, categoria, status: 'Ativo' });
+  closeModal('modalVeiculo');
+  showToast('Veículo cadastrado com sucesso!', 'success');
+  renderVeiculos();
+}
+
+function removerVeiculo(i) {
+  veiculos.splice(i, 1);
+  renderVeiculos();
+  showToast('Veículo removido.', 'info');
+}
+
+function selectService(el, name) {
+  selectedServiceType = name;
+  document.querySelectorAll('.service-type').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function checkConflict() {
+  const v = document.getElementById('selectVeiculo').value;
+  const d = document.getElementById('dataServico').value;
+  const h = document.getElementById('horaServico').value;
+  const alert = document.getElementById('conflictAlert');
+  if (v && d && h) {
+    const conflito = agendamentos.find(a => a.placa === v && a.data === d && a.hora === h);
+    if (conflito) {
+      document.getElementById('conflictMsg').textContent = `Conflito: o veículo ${v} já tem serviço neste horário.`;
+      alert.classList.add('show');
+    } else { alert.classList.remove('show'); }
+  }
+}
+
+function solicitarServico() {
+  const vPlaca = document.getElementById('selectVeiculo').value;
+  const d = document.getElementById('dataServico').value;
+  const h = document.getElementById('horaServico').value;
+  const end = document.getElementById('selectEndereco').value;
+  
+  if (!vPlaca || !d || !h || !end) { showToast('Preencha todos os campos.', 'error'); return; }
+  
+  const veic = veiculos.find(v => v.placa === vPlaca);
+  const novoAgend = {
+    id: String(42 + agendamentos.length),
+    servico: selectedServiceType,
+    veiculo: veic.modelo,
+    placa: vPlaca,
+    data: d,
+    hora: h,
+    valor: tiposServicos.find(s => s.nome === selectedServiceType).preco,
+    status: 'Pendente',
+    endereco: end
+  };
+
+  agendamentos.unshift(novoAgend);
+  
+  // Adiciona também às demandas (para o admin e funcionário verem)
+  demandasDisponiveis.unshift({
+    ...novoAgend,
+    categoria: veic.categoria
+  });
+
+  showToast('Agendamento solicitado com sucesso!', 'success');
+  navigate('dashboard');
+}
+
+function aceitarServico(i) {
+  const demanda = demandasDisponiveis[i];
+  servicoAtualFuncionario = demanda;
+  stepIndex = 0;
+  demandasDisponiveis.splice(i, 1);
+  
+  // Atualiza status no agendamento original
+  const agend = agendamentos.find(a => a.id === demanda.id);
+  if(agend) agend.status = 'Em Andamento';
+
+  showToast('Serviço aceito! Vamos lá.', 'success');
+  navigate('status');
+}
+
+function nextStep() {
+  if (stepIndex >= 4) {
+    servicoAtualFuncionario.status = 'Concluído';
+    servicoAtualFuncionario.concluidoEm = new Date().toLocaleString('pt-BR');
+    const agend = agendamentos.find(a => a.id === servicoAtualFuncionario.id);
+    if(agend) agend.status = 'Concluído';
+    
+    demandasConcluidas.unshift({ ...servicoAtualFuncionario });
+    servicoAtualFuncionario = null;
+    showToast('Serviço concluído com sucesso!', 'success');
+    navigate('concluidas');
+    return;
+  }
+  stepIndex++;
+  renderStatus();
+}
+
+function advanceStep(idx) {
+  if (idx === stepIndex + 1) nextStep();
+}
+
+function editarServico(i) {
+  const s = tiposServicos[i];
+  document.getElementById('modalServicoTitulo').textContent = 'Editar Serviço';
+  document.getElementById('servEditIndex').value = i;
+  document.getElementById('servNome').value = s.nome;
+  document.getElementById('servDesc').value = s.desc;
+  document.getElementById('servPreco').value = s.preco;
+  document.getElementById('servDuracao').value = s.duracao;
+  document.getElementById('servStatus').value = s.status;
+  openModal('modalServico');
+}
+
+function abrirNovoServico() {
+  document.getElementById('modalServicoTitulo').textContent = 'Novo Tipo de Lavagem';
+  document.getElementById('servEditIndex').value = '';
+  document.getElementById('servNome').value = '';
+  document.getElementById('servDesc').value = '';
+  document.getElementById('servPreco').value = '';
+  document.getElementById('servDuracao').value = '';
+  document.getElementById('servStatus').value = 'Ativo';
+  openModal('modalServico');
+}
+
+function salvarServicoAdmin() {
+  const nome = document.getElementById('servNome').value;
+  const desc = document.getElementById('servDesc').value;
+  const preco = parseFloat(document.getElementById('servPreco').value);
+  const duracao = document.getElementById('servDuracao').value;
+  const status = document.getElementById('servStatus').value;
+  const editIdx = document.getElementById('servEditIndex').value;
+
+  if(!nome || isNaN(preco)) { showToast('Dados inválidos.', 'error'); return; }
+
+  if (editIdx !== '') {
+    const s = tiposServicos[parseInt(editIdx)];
+    s.nome = nome; s.desc = desc; s.preco = preco; s.duracao = duracao; s.status = status;
+    showToast('Serviço atualizado!', 'success');
+  } else {
+    tiposServicos.push({
+      id: tiposServicos.length + 1,
+      nome, desc, preco, duracao, status, icon: '🧼'
+    });
+    showToast('Novo tipo de serviço criado!', 'success');
+  }
+
+  closeModal('modalServico');
+  renderServicosAdmin();
+}
+
+function toggleStatusFuncionario(id) {
+  const f = funcionarios.find(x => x.id === id);
+  if(f) {
+    f.status = f.status === 'Ativo' ? 'Inativo' : 'Ativo';
+    renderFuncionarios();
+  }
+}
+
+function openModalFuncionario() {
+  document.getElementById('modalFuncionarioTitulo').textContent = 'Cadastrar Funcionário';
+  document.getElementById('funcEditIndex').value = '';
+  document.getElementById('funcNome').value = '';
+  document.getElementById('funcCpf').value = '';
+  document.getElementById('funcTel').value = '';
+  document.getElementById('funcEmail').value = '';
+  document.getElementById('funcRegiao').value = '';
+  document.getElementById('funcStatus').value = 'Ativo';
+  openModal('modalFuncionario');
+}
+
+function editarFuncionario(id) {
+  const f = funcionarios.find(x => x.id === id);
+  if (!f) return;
+  document.getElementById('modalFuncionarioTitulo').textContent = 'Editar Funcionário';
+  document.getElementById('funcEditIndex').value = id;
+  document.getElementById('funcNome').value = f.nome;
+  document.getElementById('funcCpf').value = f.cpf || '';
+  document.getElementById('funcTel').value = f.tel;
+  document.getElementById('funcEmail').value = f.email;
+  document.getElementById('funcRegiao').value = f.regiao;
+  document.getElementById('funcStatus').value = f.status;
+  openModal('modalFuncionario');
+}
+
+function salvarFuncionario() {
+  const nome = document.getElementById('funcNome').value;
+  const email = document.getElementById('funcEmail').value;
+  const regiao = document.getElementById('funcRegiao').value;
+  const tel = document.getElementById('funcTel').value;
+  const cpf = document.getElementById('funcCpf').value;
+  const status = document.getElementById('funcStatus').value;
+  const editId = document.getElementById('funcEditIndex').value;
+
+  if(!nome || !email) { showToast('Preencha o nome e e-mail.', 'error'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Informe um e-mail válido (ex: nome@email.com).', 'error'); return; }
+
+  if (editId) {
+    const f = funcionarios.find(x => x.id === parseInt(editId));
+    if (f) {
+      f.nome = nome; f.email = email; f.regiao = regiao;
+      f.tel = tel || f.tel; f.cpf = cpf || f.cpf; f.status = status;
+      showToast('Funcionário atualizado!', 'success');
+    }
+  } else {
+    funcionarios.push({
+      id: funcionarios.length + 1,
+      nome, tel: tel || '(47) 90000-0000', cpf, email, regiao, status
+    });
+    showToast('Funcionário cadastrado!', 'success');
+  }
+
+  closeModal('modalFuncionario');
+  renderFuncionarios();
+}
+
+function showToast(msg, type='info') {
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+
+// ── INIT ──
+setRole('cliente');
+
+</script>
+</body>
+</html>
