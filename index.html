@@ -779,8 +779,8 @@
 
       <div class="card">
         <div style="margin-bottom:16px;display:flex;gap:10px;">
-          <input type="text" class="form-input" placeholder="🔍 Buscar funcionário por nome ou região…" style="max-width:360px;" oninput="filtrarFuncionarios(this.value)">
-          <select class="form-select" style="max-width:180px;" onchange="filtrarPorStatus(this.value)">
+          <input type="text" id="filtroFuncTexto" class="form-input" placeholder="🔍 Buscar funcionário por nome ou região…" style="max-width:360px;" oninput="filtrarFuncionarios(this.value)">
+          <select id="filtroFuncStatus" class="form-select" style="max-width:180px;" onchange="filtrarPorStatus(this.value)">
             <option value="">Todos os status</option>
             <option value="Ativo">Ativos</option>
             <option value="Inativo">Inativos</option>
@@ -795,6 +795,43 @@
             </thead>
             <tbody id="corpoFuncionarios">
               <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== DEMANDAS CONCLUÍDAS (ADMIN) ====== -->
+    <div class="page" id="page-admin-concluidas">
+      <div class="gold-line"></div>
+      <div class="section-header">
+        <div class="section-title">Demandas <span>Concluídas</span></div>
+        <span class="badge badge-green" id="admin-badge-total-concluidas">0 serviços</span>
+      </div>
+      <div class="grid-3" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-title">Total Concluído</div>
+          <div class="card-value" style="color:#81c784;" id="admin-total-concluidos">0</div>
+          <div class="card-sub">Serviços finalizados</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Valor Total</div>
+          <div class="card-value" id="admin-valor-total-concluidos">R$ 0,00</div>
+          <div class="card-sub">Receita gerada</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Último Serviço</div>
+          <div class="card-value" style="font-size:1rem;" id="admin-ultimo-concluido">—</div>
+          <div class="card-sub">Mais recente</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Serviço</th><th>Veículo</th><th>Data/Hora</th><th>Endereço</th><th>Funcionário</th><th>Valor</th><th>Concluído em</th></tr>
+            </thead>
+            <tbody id="corpoAdminConcluidas">
             </tbody>
           </table>
         </div>
@@ -1084,6 +1121,7 @@ const menus = {
   ],
   admin: [
     { id:'demandas', icon:'📦', label:'Demandas Disponíveis' },
+    { id:'admin-concluidas', icon:'✅', label:'Demandas Concluídas' },
     { id:'servicos', icon:'⚙️', label:'Gestão de Serviços' },
     { id:'funcionarios', icon:'👷', label:'Gestão de Funcionários' },
     { id:'financeiro', icon:'💰', label:'Financeiro' },
@@ -1144,6 +1182,7 @@ function renderCurrentPageData(pageId) {
     case 'agenda': renderAgenda(); break;
     case 'servicos': renderServicosAdmin(); break;
     case 'funcionarios': renderFuncionarios(); break;
+    case 'admin-concluidas': renderAdminConcluidas(); break;
     case 'financeiro': renderFinanceiro(); break;
   }
 }
@@ -1405,9 +1444,18 @@ function renderServicosAdmin() {
   `).join('');
 }
 
-function renderFuncionarios() {
+function renderFuncionarios(lista) {
+  const filtroTexto = document.getElementById('filtroFuncTexto') ? document.getElementById('filtroFuncTexto').value.toLowerCase() : '';
+  const filtroStatus = document.getElementById('filtroFuncStatus') ? document.getElementById('filtroFuncStatus').value : '';
+  let visiveis = lista || funcionarios;
+  if (filtroTexto) visiveis = visiveis.filter(f => f.nome.toLowerCase().includes(filtroTexto) || (f.regiao||'').toLowerCase().includes(filtroTexto));
+  if (filtroStatus) visiveis = visiveis.filter(f => f.status === filtroStatus);
+
   const tbody = document.getElementById('corpoFuncionarios');
-  tbody.innerHTML = funcionarios.map(f => `
+  if (visiveis.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--texto-muted);padding:32px;">Nenhum funcionário encontrado.</td></tr>';
+  } else {
+  tbody.innerHTML = visiveis.map(f => `
     <tr>
       <td style="color:var(--texto-muted);font-size:.78rem;">#${String(f.id).padStart(3,'0')}</td>
       <td><b>${f.nome}</b></td>
@@ -1423,11 +1471,47 @@ function renderFuncionarios() {
       </td>
     </tr>
   `).join('');
+  }
 
   const ativos = funcionarios.filter(f=>f.status==='Ativo').length;
   document.getElementById('totalFuncionarios').textContent = funcionarios.length;
   document.getElementById('totalAtivos').textContent = ativos;
   document.getElementById('totalInativos').textContent = funcionarios.length - ativos;
+}
+
+function filtrarFuncionarios(valor) {
+  renderFuncionarios();
+}
+
+function filtrarPorStatus(valor) {
+  renderFuncionarios();
+}
+
+function renderAdminConcluidas() {
+  const total = demandasConcluidas.length;
+  const valorTotal = demandasConcluidas.reduce((acc, d) => acc + (d.valor || 0), 0);
+  document.getElementById('admin-total-concluidos').textContent = total;
+  document.getElementById('admin-valor-total-concluidos').textContent = `R$ ${valorTotal.toFixed(2)}`;
+  document.getElementById('admin-badge-total-concluidas').textContent = `${total} serviço${total !== 1 ? 's' : ''}`;
+  document.getElementById('admin-ultimo-concluido').textContent = total > 0 ? demandasConcluidas[0].servico : '—';
+
+  const tbody = document.getElementById('corpoAdminConcluidas');
+  if (total === 0) {
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--texto-muted);padding:32px;">Nenhum serviço concluído ainda.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = demandasConcluidas.map(d => `
+    <tr>
+      <td style="color:var(--texto-muted);font-size:.78rem;">#${d.id}</td>
+      <td><b>${d.servico}</b></td>
+      <td>${d.veiculo} · <span style="color:var(--ouro)">${d.placa}</span></td>
+      <td>${d.data} às ${d.hora}</td>
+      <td style="font-size:.8rem;color:#aaa;">${d.endereco}</td>
+      <td style="color:var(--ouro);font-weight:600;">👷 ${d.funcionarioNome || 'N/D'}</td>
+      <td style="color:var(--ouro);font-weight:700;">R$ ${(d.valor||0).toFixed(2)}</td>
+      <td style="font-size:.78rem;color:#81c784;">${d.concluidoEm || '—'}</td>
+    </tr>
+  `).join('');
 }
 
 function renderFinanceiro() {
@@ -1621,7 +1705,7 @@ function solicitarServico() {
 
 function aceitarServico(i) {
   const demanda = demandasDisponiveis[i];
-  servicoAtualFuncionario = { ...demanda };
+  servicoAtualFuncionario = { ...demanda, funcionarioNome: roleNames[currentRole] };
   stepIndex = 0;
   demandasDisponiveis.splice(i, 1);
 
@@ -1629,6 +1713,7 @@ function aceitarServico(i) {
   let agend = agendamentos.find(a => a.id === demanda.id);
   if (agend) {
     agend.status = 'Em Andamento';
+    agend.funcionarioNome = roleNames[currentRole];
   } else {
     agendamentos.unshift({
       id: demanda.id,
@@ -1639,7 +1724,8 @@ function aceitarServico(i) {
       hora: demanda.hora,
       valor: demanda.valor,
       endereco: demanda.endereco,
-      status: 'Em Andamento'
+      status: 'Em Andamento',
+      funcionarioNome: roleNames[currentRole]
     });
   }
 
@@ -1652,7 +1738,7 @@ function nextStep() {
     servicoAtualFuncionario.status = 'Concluído';
     servicoAtualFuncionario.concluidoEm = new Date().toLocaleString('pt-BR');
     const agend = agendamentos.find(a => a.id === servicoAtualFuncionario.id);
-    if(agend) agend.status = 'Concluído';
+    if(agend) { agend.status = 'Concluído'; agend.concluidoEm = servicoAtualFuncionario.concluidoEm; agend.funcionarioNome = servicoAtualFuncionario.funcionarioNome; }
     
     demandasConcluidas.unshift({ ...servicoAtualFuncionario });
     servicoAtualFuncionario = null; // Remove da agenda
