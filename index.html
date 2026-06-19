@@ -625,8 +625,8 @@
       <div class="gold-line"></div>
       <div class="section-header">
         <div class="section-title">Histórico de <span>Pedidos</span></div>
-        <select class="form-select" style="width:160px;padding:7px 12px;font-size:.82rem;">
-          <option>Todos</option><option>Concluídos</option><option>Cancelados</option>
+        <select class="form-select" id="filtroHistorico" style="width:160px;padding:7px 12px;font-size:.82rem;" onchange="renderHistorico()">
+          <option value="">Todos</option><option value="Concluído">Concluídos</option><option value="Cancelado">Cancelados</option>
         </select>
       </div>
       <div class="card">
@@ -1018,7 +1018,7 @@
 // ── STATE ──
 let currentRole = 'cliente';
 let currentPage = 'dashboard';
-let stepIndex = 1;
+let stepIndex = 0;
 
 const stepLabels = ['Aceito','Deslocamento','No Local','Em Serviço','Concluído'];
 
@@ -1250,8 +1250,14 @@ function renderSolicitar() {
 }
 
 function renderHistorico() {
+  const filtro = document.getElementById('filtroHistorico') ? document.getElementById('filtroHistorico').value : '';
+  const lista = filtro ? agendamentos.filter(a => a.status === filtro) : agendamentos;
   const tbody = document.getElementById('corpoHistorico');
-  tbody.innerHTML = agendamentos.map(a => `
+  if (lista.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--texto-muted);padding:32px;">Nenhum registro encontrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map(a => `
     <tr>
       <td style="color:var(--texto-muted)">#${a.id}</td>
       <td>${a.servico}</td>
@@ -1334,10 +1340,11 @@ function renderStatus() {
 
 function renderAgenda() {
   const container = document.getElementById('listaAgenda');
-  const agenda = agendamentos.filter(a => a.status === 'Confirmado');
+  // Mostra serviços em andamento (aceitos pelo funcionário) e confirmados
+  const agenda = servicoAtualFuncionario ? [servicoAtualFuncionario] : [];
   
   if (agenda.length === 0) {
-    container.innerHTML = '<div class="empty-state">Sua agenda está vazia.</div>';
+    container.innerHTML = '<div class="empty-state"><div class="icon">📅</div><p>Sua agenda está vazia. Aceite uma demanda para ela aparecer aqui.</p></div>';
     return;
   }
 
@@ -1349,7 +1356,10 @@ function renderAgenda() {
         <div class="service">${a.veiculo} · ${a.placa}</div>
         <div class="address">📍 ${a.endereco}</div>
       </div>
-      <span class="badge badge-gold">${a.status}</span>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+        <span class="badge badge-gold">Em Andamento</span>
+        <button class="btn btn-gold btn-sm" onclick="navigate('status')">Atualizar Status</button>
+      </div>
     </div>
   `).join('');
 }
@@ -1420,36 +1430,24 @@ function renderFuncionarios() {
 }
 
 function renderFinanceiro() {
-  // Combina agendamentos concluídos com demandas concluídas pelo funcionário
+  // Usa somente agendamentos como fonte de verdade para evitar duplicações.
+  // demandasConcluidas sincronizam o status em agendamentos via nextStep().
   const agendConcluidos = agendamentos.filter(a => a.status === 'Concluído');
-  const ganhos = agendConcluidos.reduce((acc, a) => acc + a.valor, 0)
-                + demandasConcluidas.reduce((acc, d) => acc + (d.valor||0), 0);
-  const aGanhar = agendamentos.filter(a => a.status === 'Confirmado' || a.status === 'Pendente').reduce((acc, a) => acc + a.valor, 0);
+  const ganhos = agendConcluidos.reduce((acc, a) => acc + a.valor, 0);
+  const aGanhar = agendamentos.filter(a => a.status === 'Confirmado' || a.status === 'Pendente' || a.status === 'Em Andamento').reduce((acc, a) => acc + a.valor, 0);
   
   document.getElementById('financeiro-ganho').textContent = `R$ ${ganhos.toFixed(2)}`;
   document.getElementById('financeiro-a-ganhar').textContent = `R$ ${aGanhar.toFixed(2)}`;
   document.getElementById('financeiro-total').textContent = `R$ ${(ganhos + aGanhar).toFixed(2)}`;
 
-  // Todas as transações: agendamentos + demandas concluídas pelos funcionários
-  const todasTransacoes = [
-    ...agendamentos.map(a => ({
-      data: a.data, servico: a.servico, funcionario: 'Carlos Lima',
-      valor: a.valor, status: a.status, origem: 'agendamento'
-    })),
-    ...demandasConcluidas.map(d => ({
-      data: d.data, servico: d.servico, funcionario: roleNames.funcionario,
-      valor: d.valor || 0, status: 'Concluído', origem: 'funcionario'
-    }))
-  ];
-
   const tbody = document.getElementById('corpoFinanceiro');
-  tbody.innerHTML = todasTransacoes.map(a => `
+  tbody.innerHTML = agendamentos.map(a => `
     <tr>
       <td>${a.data}</td>
       <td>${a.servico}</td>
-      <td style="font-size:.82rem;color:#ccc;">${a.funcionario}</td>
+      <td style="font-size:.82rem;color:#ccc;">${a.veiculo} · ${a.placa}</td>
       <td style="font-weight:600;color:var(--ouro)">R$ ${(a.valor||0).toFixed(2)}</td>
-      <td><span class="badge ${a.status==='Concluído'?'badge-green':a.status==='Cancelado'?'badge-red':'badge-gold'}">${a.status}</span></td>
+      <td><span class="badge ${a.status==='Concluído'?'badge-green':a.status==='Cancelado'?'badge-red':a.status==='Em Andamento'?'badge-blue':'badge-gold'}">${a.status}</span></td>
     </tr>
   `).join('');
 }
@@ -1510,6 +1508,13 @@ function salvarEndereco() {
   const cep = document.getElementById('endCep').value;
 
   if(!apelido || !rua || !num) { showToast('Preencha os campos obrigatórios.', 'error'); return; }
+
+  // Validação CEP: somente dígitos, exatamente 8
+  const cepDigitos = cep.replace(/\D/g, '');
+  if (cepDigitos.length !== 8) {
+    showToast('CEP inválido. Informe exatamente 8 dígitos (ex: 89201000 ou 89201-000).', 'error');
+    return;
+  }
 
   enderecos.push({ apelido, rua, numero: num, bairro, cidade, cep, principal: false });
   closeModal('modalEndereco');
@@ -1576,6 +1581,17 @@ function solicitarServico() {
   const end = document.getElementById('selectEndereco').value;
   
   if (!vPlaca || !d || !h || !end) { showToast('Preencha todos os campos.', 'error'); return; }
+
+  // Validação: agendamento com no mínimo 12h de antecedência
+  const [ano, mes, dia] = d.split('-').map(Number);
+  const [hora, min] = h.split(':').map(Number);
+  const dataHoraAgend = new Date(ano, mes - 1, dia, hora, min, 0);
+  const agora = new Date();
+  const diffHoras = (dataHoraAgend - agora) / (1000 * 60 * 60);
+  if (diffHoras < 12) {
+    showToast('Agendamento não permitido. É necessário pelo menos 12 horas de antecedência.', 'error');
+    return;
+  }
   
   const veic = veiculos.find(v => v.placa === vPlaca);
   const novoAgend = {
@@ -1624,7 +1640,7 @@ function nextStep() {
     if(agend) agend.status = 'Concluído';
     
     demandasConcluidas.unshift({ ...servicoAtualFuncionario });
-    servicoAtualFuncionario = null;
+    servicoAtualFuncionario = null; // Remove da agenda
     showToast('Serviço concluído com sucesso!', 'success');
     navigate('concluidas');
     return;
@@ -1731,6 +1747,18 @@ function salvarFuncionario() {
 
   if(!nome || !email) { showToast('Preencha o nome e e-mail.', 'error'); return; }
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showToast('Informe um e-mail válido (ex: nome@email.com).', 'error'); return; }
+
+  // Validação CPF: exatamente 11 dígitos
+  const cpfDigitos = cpf.replace(/\D/g, '');
+  if (cpf && cpfDigitos.length !== 11) {
+    showToast('CPF inválido. Informe exatamente 11 dígitos (ex: 000.000.000-00).', 'error'); return;
+  }
+
+  // Validação Telefone: exatamente 11 dígitos
+  const telDigitos = tel.replace(/\D/g, '');
+  if (tel && telDigitos.length !== 11) {
+    showToast('Telefone inválido. Informe exatamente 11 dígitos com DDD (ex: (47) 99999-9999).', 'error'); return;
+  }
 
   if (editId) {
     const f = funcionarios.find(x => x.id === parseInt(editId));
