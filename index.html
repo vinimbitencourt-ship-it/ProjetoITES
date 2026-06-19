@@ -1040,13 +1040,14 @@ let tiposServicos = [
 ];
 
 let agendamentos = [
-  { id: '0041', servico: 'Lavagem Completa', veiculo: 'Honda Civic', placa: 'ABC-1234', data: '2026-06-12', hora: '14:00', valor: 75, status: 'Confirmado', endereco: 'Rua das Flores, 123' },
-  { id: '0040', servico: 'Lavagem Simples', veiculo: 'Toyota RAV4', placa: 'DEF-5678', data: '2026-06-13', hora: '09:00', valor: 35, status: 'Pendente', endereco: 'Av. Principal, 456' }
+  { id: '0041', servico: 'Lavagem Completa', veiculo: 'Honda Civic', placa: 'ABC-1234', data: '2026-06-12', hora: '14:00', valor: 75, status: 'Pendente', endereco: 'Rua das Flores, 123', categoria: 'Sedan' },
+  { id: '0040', servico: 'Lavagem Simples', veiculo: 'Toyota RAV4', placa: 'DEF-5678', data: '2026-06-13', hora: '09:00', valor: 35, status: 'Pendente', endereco: 'Av. Principal, 456', categoria: 'SUV' }
 ];
 
+// demandasDisponiveis aponta para os mesmos IDs de agendamentos — sem duplicação
 let demandasDisponiveis = [
-  { id: '0042', servico: 'Lavagem Completa', veiculo: 'Honda Civic', placa: 'ABC-1234', data: '2026-06-12', hora: '16:00', valor: 75, categoria: 'Sedan', endereco: 'Rua XV de Novembro, 88 — Joinville-SC' },
-  { id: '0043', servico: 'Lavagem Simples', veiculo: 'Fiat Uno', placa: 'GHI-9012', data: '2026-06-13', hora: '08:30', valor: 35, categoria: 'Hatch', endereco: 'Rua Blumenau, 200 — Joinville-SC' }
+  { ...agendamentos[0], categoria: agendamentos[0].categoria },
+  { ...agendamentos[1], categoria: agendamentos[1].categoria }
 ];
 
 let servicoAtualFuncionario = null;
@@ -1620,13 +1621,27 @@ function solicitarServico() {
 
 function aceitarServico(i) {
   const demanda = demandasDisponiveis[i];
-  servicoAtualFuncionario = demanda;
+  servicoAtualFuncionario = { ...demanda };
   stepIndex = 0;
   demandasDisponiveis.splice(i, 1);
-  
-  // Atualiza status no agendamento original
-  const agend = agendamentos.find(a => a.id === demanda.id);
-  if(agend) agend.status = 'Em Andamento';
+
+  // Garante que o agendamento existe; se não existir (demanda sem espelho), cria
+  let agend = agendamentos.find(a => a.id === demanda.id);
+  if (agend) {
+    agend.status = 'Em Andamento';
+  } else {
+    agendamentos.unshift({
+      id: demanda.id,
+      servico: demanda.servico,
+      veiculo: demanda.veiculo,
+      placa: demanda.placa,
+      data: demanda.data,
+      hora: demanda.hora,
+      valor: demanda.valor,
+      endereco: demanda.endereco,
+      status: 'Em Andamento'
+    });
+  }
 
   showToast('Serviço aceito! Vamos lá.', 'success');
   navigate('status');
